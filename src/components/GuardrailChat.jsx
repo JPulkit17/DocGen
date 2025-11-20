@@ -2,10 +2,12 @@ import { useState, useRef } from "react";
 import { Send, Trash2 } from "lucide-react";
 import { Button } from "./retroui/Button";
 import { Input } from "./retroui/Input";
+import { useMutation } from "@tanstack/react-query";
 
 export default function GuardrailChat({
   projectName = "Guardrail Chat",
   guardrailName = "presidi-pii",
+  projectId,
 }) {
   const [messages, setMessages] = useState(() => [
     {
@@ -25,10 +27,28 @@ export default function GuardrailChat({
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
   const messagesEndRef = useRef(null);
 
-  const handleSendMessage = () => {
+  const chatMutation = useMutation({
+    mutationFn: async (query) => {
+      const response = await fetch(
+        String(import.meta.env.VITE_GUARDRAIL_CHAT_API) + `/${projectId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to get response from backend");
+      }
+      return response.json();
+    },
+  });
+
+  const handleSendMessage = async () => {
     if (!input.trim()) return;
 
     const userMessage = {
@@ -42,18 +62,29 @@ export default function GuardrailChat({
     setInput("");
     setIsLoading(true);
 
-    setTimeout(() => {
-      const assistantMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content:
-          "I've received your message and applied guardrail protections.",
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsLoading(false);
-    }, 1000);
+    chatMutation.mutate(input, {
+      onSuccess: (data) => {
+        const assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: data.ai_response || "No response from backend.",
+          timestamp: new Date(),
+          sanitized: data.sanitized_response || "",
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        setIsLoading(false);
+      },
+      onError: () => {
+        const errorMessage = {
+          id: (Date.now() + 2).toString(),
+          role: "assistant",
+          content: "Error: Could not get response from backend.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+        setIsLoading(false);
+      },
+    });
   };
 
   const handleClearChat = () => {
@@ -92,12 +123,26 @@ export default function GuardrailChat({
               }`}
             >
               {msg.role === "assistant" && (
-                <div className="flex items-center gap-2 mb-2 border-b border-current/10 pb-1">
-                  <span className="text-xs font-semibold">Assistant</span>
-                  <span className="text-xs opacity-60">gpt-3.5-turbo</span>
+                <div className="flex flex-col gap-2 mb-2 border-b border-current/10 pb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold">Assistant</span>
+                    <span className="text-xs opacity-60">gpt-3.5-turbo</span>
+                  </div>
+                  <p className="text-sm">{msg.content}</p>
+                  {msg.sanitized && (
+                    <div className="mt-2 p-2 rounded bg-yellow-100 text-yellow-900 text-xs border border-yellow-300">
+                      <strong>Sanitized Input:</strong> {msg.sanitized}
+                      <div className="mt-1">
+                        This is the information sent to the LLM. Personal info
+                        is masked.
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-              <p className="text-sm">{msg.content}</p>
+              {msg.role !== "assistant" && (
+                <p className="text-sm">{msg.content}</p>
+              )}
               <p className="text-[10px] opacity-60 mt-1">
                 {msg.timestamp.toLocaleTimeString([], {
                   hour: "2-digit",

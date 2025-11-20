@@ -6,7 +6,7 @@ import GuardrailChat from "../components/GuardrailChat";
 export default function Guardrail() {
   const params = useParams();
   const projectId = params.id;
-  const { data, isLoading, error } = useRegistryEntities();
+  const { data = [], isLoading, error } = useRegistryEntities();
 
   if (isLoading) {
     return <div className="p-8 text-center">Loading registry entities...</div>;
@@ -24,8 +24,8 @@ export default function Guardrail() {
   return (
     <div className="flex overflow-hidden bg-background">
       {/* Sidebar */}
-      <div className="w-[340px] min-w-[340px] border-r border-border bg-card flex flex-col">
-        <PIIConfigPanel piiTypes={data} />
+      <div className="w-[340px] min-w-[340px] border-r border-border bg-card flex flex-col h-[80vh] pb-3">
+        <PIIConfigPanel piiTypes={data} projectId={projectId} />
       </div>
 
       {/* Chat Area */}
@@ -34,6 +34,7 @@ export default function Guardrail() {
           projectName={`Project ${projectId}`}
           guardrailName="presidi-pii"
           registryEntities={data}
+          projectId={projectId}
         />
       </div>
     </div>
