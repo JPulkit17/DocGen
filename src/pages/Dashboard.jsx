@@ -88,16 +88,16 @@ export default function Dashboard() {
           />
 
           <StatsCard
-            label="Completed"
+            label="PI's Identified"
             value={stats.completed}
             icon={<CheckCircle className="w-6 h-6 text-green-500" />}
           />
 
-          <StatsCard
+          {/* <StatsCard
             label="Processing"
             value={stats.active}
             icon={<Clock className="w-6 h-6 text-blue-500" />}
-          />
+          /> */}
 
           <StatsCard
             label="Avg. Time"

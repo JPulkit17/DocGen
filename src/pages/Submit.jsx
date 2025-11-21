@@ -33,16 +33,16 @@ export default function Submit() {
       newErrors.managerName = "Manager name is required";
     }
 
-    if (!formData.repoUrl.trim()) {
-      newErrors.repoUrl = "Repository URL is required";
-    } else if (
-      !/^https:\/\/github\.com\/[\w-]+\/[\w-]+\/?$/.test(
-        formData.repoUrl.trim()
-      )
-    ) {
-      newErrors.repoUrl =
-        "Please enter a valid GitHub URL (e.g., https://github.com/user/repo)";
-    }
+    // if (!formData.repoUrl.trim()) {
+    //   newErrors.repoUrl = "Repository URL is required";
+    // } else if (
+    //   !/^https:\/\/github\.com\/[\w-]+\/[\w-]+\/?$/.test(
+    //     formData.repoUrl.trim()
+    //   )
+    // ) {
+    //   newErrors.repoUrl =
+    //     "Please enter a valid GitHub URL (e.g., https://github.com/user/repo)";
+    // }
 
     if (!formData.branchName.trim()) {
       newErrors.branchName = "Branch name is required";

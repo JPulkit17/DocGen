@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import {  Plus, PlusIcon, Send, Trash2, X } from "lucide-react";
+import { Plus, PlusIcon, Send, Trash2, X } from "lucide-react";
 import { Button } from "./retroui/Button";
 import { Input } from "./retroui/Input";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -56,7 +56,9 @@ export default function GuardrailChat({
   const removeGuardrailMutation = useMutation({
     mutationFn: async (guardrailId) => {
       const response = await fetch(
-        `${import.meta.env.VITE_CREATE_GUARDRAIL_PROJECT}/${guardrailId}/${projectId}`,
+        `${
+          import.meta.env.VITE_CREATE_GUARDRAIL_PROJECT
+        }/${guardrailId}/${projectId}`,
         {
           method: "DELETE",
           headers: {
@@ -70,7 +72,7 @@ export default function GuardrailChat({
       // return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
     },
   });
 
@@ -129,35 +131,36 @@ export default function GuardrailChat({
         <div className="text-sm flex flex-col gap-2 text-muted-foreground">
           Active Guardrails:{" "}
           <div className="inline-flex flex-row my-1 gap-2 h-8">
-          {
-            guardrails.map((chip) => (
-                     <Badge 
-                       key={chip.guardrail_id} 
-                       variant={selectedGuardrailId === chip.guardrail_id ? "default" : "outline" }
-                       size="md" 
-                       className="m-0 items-center text-xs gap-2 inline-flex px-3 py-2 cursor-pointer hover:opacity-80 transition-opacity"
-                       onClick={() => onSelectGuardrail?.(chip.guardrail_id)}
-                     >
-            <span>{chip.guardrail_name}</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                removeGuardrailMutation.mutate(chip.guardrail_id);
-              }}
-              className="ml-1 hover:opacity-70 transition-opacity"
-              aria-label={`Remove ${chip.guardrail_name}`}
-            >
-              <X size={16} />
-            </button>
-          </Badge>
-
-            ))
-          }
-          <CreateGuardrail>
-          <button  className="h-full size-8 outline-2 outline-foreground p-2 hover:opacity-70 transition-opacity flex items-center justify-between"  ><PlusIcon size={16}/></button>
-
-          </CreateGuardrail>
-          
+            {guardrails.map((chip) => (
+              <Badge
+                key={chip.guardrail_id}
+                variant={
+                  selectedGuardrailId === chip.guardrail_id
+                    ? "default"
+                    : "outline"
+                }
+                size="md"
+                className="m-0 items-center text-xs gap-2 inline-flex px-3 py-2 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => onSelectGuardrail?.(chip.guardrail_id)}
+              >
+                <span>{chip.guardrail_name}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeGuardrailMutation.mutate(chip.guardrail_id);
+                  }}
+                  className="ml-1 hover:opacity-70 transition-opacity"
+                  aria-label={`Remove ${chip.guardrail_name}`}
+                >
+                  <X size={16} />
+                </button>
+              </Badge>
+            ))}
+            <CreateGuardrail>
+              <button className="h-full size-8 outline-2 outline-foreground p-2 hover:opacity-70 transition-opacity flex items-center justify-between">
+                <PlusIcon size={16} />
+              </button>
+            </CreateGuardrail>
           </div>
         </div>
       </div>
@@ -182,9 +185,9 @@ export default function GuardrailChat({
                 <div className="flex flex-col gap-2 mb-2 border-b border-current/10 pb-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold">Assistant</span>
-                    <span className="text-xs opacity-60">gpt-3.5-turbo</span>
+                    {/* <span className="text-xs opacity-60">gpt-3.5-turbo</span> */}
                   </div>
-                  <p className="text-sm">{msg.content}</p>
+                  {/* <p className="text-sm">{msg.content}</p> */}
                   {msg.sanitized && (
                     <div className="mt-2 p-2 rounded bg-yellow-100 text-yellow-900 text-xs border border-yellow-300">
                       <strong>Sanitized Input:</strong> {msg.sanitized}

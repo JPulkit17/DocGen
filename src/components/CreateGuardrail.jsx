@@ -1,72 +1,76 @@
-import React, { useState, useMemo } from 'react'
-import { Dialog } from './retroui/Dialog'
-import { Button } from './retroui/Button'
-import { Input } from './retroui/Input'
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import { useParams } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import React, { useState, useMemo } from "react";
+import { Dialog } from "./retroui/Dialog";
+import { Button } from "./retroui/Button";
+import { Input } from "./retroui/Input";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { Search } from "lucide-react";
 
 const CreateGuardrail = ({ children }) => {
-  const [open, setOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const params = useParams()
-  const projectId = params.id
-  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const params = useParams();
+  const projectId = params.id;
+  const queryClient = useQueryClient();
 
   // Fetch available guardrails
   const { data: guardrails = [], isLoading: guardrailsLoading } = useQuery({
-    queryKey: ['guardrails', projectId],
+    queryKey: ["guardrails", projectId],
     queryFn: async () => {
       const response = await fetch(
-        `http://localhost:8080/api/guardrails/project-guardrails/${projectId}`
-      )
-      if (!response.ok) throw new Error('Failed to fetch guardrails')
-      return response.json()
+        `${import.meta.env.VITE_CREATE_GUARDRAIL_PROJECT}/${projectId}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch guardrails");
+      return response.json();
     },
     enabled: open,
-  })
+  });
 
   // Filter guardrails based on search
   const filteredGuardrails = useMemo(() => {
-    return guardrails.filter(g =>
+    if (!guardrails || !Array.isArray(guardrails) || guardrails.length === 0)
+      return;
+    return guardrails.filter((g) =>
       g.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [guardrails, searchTerm])
+    );
+  }, [guardrails, searchTerm]);
 
   const createGuardrailMutation = useMutation({
     mutationFn: async (guardrailName) => {
-      const payload = { name: guardrailName }
+      const payload = { name: guardrailName };
       const response = await fetch(
         import.meta.env.VITE_CREATE_GUARDRAIL_PROJECT + `/${projectId}`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
-      )
-      if (!response.ok) throw new Error('Failed to create guardrail')
-      return response.json()
+      );
+      if (!response.ok) throw new Error("Failed to create guardrail");
+      return response.json();
     },
-  })
+  });
 
   const attachGuardrailMutation = useMutation({
     mutationFn: async (guardrailId) => {
       const response = await fetch(
-        `http://localhost:8080/api/guardrails/${projectId}/${guardrailId}`,
+        `${
+          import.meta.env.VITE_CREATE_GUARDRAIL_PROJECT
+        }/${projectId}/${guardrailId}`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
         }
-      )
-      console.log(response)
-      if (!response.ok) throw new Error('Failed to attach guardrail')
-    //   return response.json()
+      );
+      console.log(response);
+      if (!response.ok) throw new Error("Failed to attach guardrail");
+      //   return response.json()
     },
     onSuccess: () => {
-        setOpen(false)
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+      setOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
     },
-  })
+  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -87,17 +91,19 @@ const CreateGuardrail = ({ children }) => {
                 className="pl-10"
               />
             </div>
-            <Button 
+            <Button
               disabled={!searchTerm.trim()}
               onClick={() => {
                 if (searchTerm.trim()) {
                   createGuardrailMutation.mutate(searchTerm, {
                     onSuccess: async () => {
-                      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-                      setSearchTerm('')
-                      setOpen(false)
+                      queryClient.invalidateQueries({
+                        queryKey: ["project", projectId],
+                      });
+                      setSearchTerm("");
+                      setOpen(false);
                     },
-                  })
+                  });
                 }
               }}
             >
@@ -109,7 +115,7 @@ const CreateGuardrail = ({ children }) => {
             <p className="text-center text-muted-foreground text-sm py-4">
               Loading guardrails...
             </p>
-          ) : filteredGuardrails.length === 0 ? (
+          ) : filteredGuardrails?.length === 0 || !filteredGuardrails ? (
             <p className="text-center text-muted-foreground text-sm py-4">
               No guardrails found
             </p>
@@ -129,10 +135,10 @@ const CreateGuardrail = ({ children }) => {
                   <Button
                     size="sm"
                     disabled={guardrail.attached}
-                    variant={guardrail.attached ? 'outline' : 'default'}
+                    variant={guardrail.attached ? "outline" : "default"}
                     onClick={() => attachGuardrailMutation.mutate(guardrail.id)}
                   >
-                    {guardrail.attached ? 'Attached' : 'Attach'}
+                    {guardrail.attached ? "Attached" : "Attach"}
                   </Button>
                 </div>
               ))}
@@ -140,13 +146,17 @@ const CreateGuardrail = ({ children }) => {
           )}
         </div>
         <Dialog.Footer>
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+          >
             Cancel
           </Button>
         </Dialog.Footer>
       </Dialog.Content>
     </Dialog>
-  )
-}
+  );
+};
 
-export default CreateGuardrail
+export default CreateGuardrail;

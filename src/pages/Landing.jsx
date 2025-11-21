@@ -30,7 +30,7 @@ function Landing() {
             </div>
 
             <h1 className="text-5xl font-bold tracking-tight text-foreground">
-              Automated Code Documentation Generator
+              Automated Secure Code Documentation Generator
             </h1>
 
             <p className="text-xl text-muted-foreground">
@@ -90,7 +90,7 @@ function Landing() {
           </div>
         </div>
       </main>
-      <Features />
+      {/* <Features /> */}
     </div>
   );
 }
