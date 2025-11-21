@@ -192,8 +192,8 @@ export default function GuardrailChat({
                     <div className="mt-2 p-2 rounded bg-yellow-100 text-yellow-900 text-xs border border-yellow-300">
                       <strong>Sanitized Input:</strong> {msg.sanitized}
                       <div className="mt-1">
-                        This is the information sent to the LLM. Personal info
-                        is masked.
+                        This is the information sent to the LLM. DataVeil masks
+                        personal information before sending.
                       </div>
                     </div>
                   )}

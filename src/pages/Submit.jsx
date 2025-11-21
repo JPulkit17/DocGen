@@ -57,6 +57,7 @@ export default function Submit() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+
     if (!validateForm()) {
       toast.error("Please fix the errors in the form");
       return;
@@ -70,10 +71,10 @@ export default function Submit() {
       git_branch: formData.branchName,
     };
 
-    console.log(payload);
+    // console.log(payload);
 
     createProjectMutation.mutate(
-      { payload },
+      { payload:payload, navigate:navigate },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["projects"] });

@@ -11,7 +11,7 @@ export default function Footer() {
               <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
                 CD
               </div>
-              DocGen
+              DataVeil
             </div>
             <p className="mt-3 text-sm text-muted-foreground max-w-xs">
               AI-powered documentation generation for your GitHub projects.
@@ -83,7 +83,7 @@ export default function Footer() {
 
         {/* Bottom strip */}
         <div className="border-t border-border mt-10 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} DocGen. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} DataVeil. All rights reserved.</p>
           <p className="mt-2 md:mt-0">
             Built with ❤️ by team{" "}
             <span className="text-red-700">404 Not Found</span>

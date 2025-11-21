@@ -30,12 +30,13 @@ function Landing() {
             </div>
 
             <h1 className="text-5xl font-bold tracking-tight text-foreground">
-              Automated Secure Code Documentation Generator
+              DataVeil — PII Masking
             </h1>
 
             <p className="text-xl text-muted-foreground">
-              Submit your GitHub repository, and our backend analyzes the entire
-              codebase to generate rich documentation and logs in minutes.
+              Submit your GitHub repository — DataVeil analyzes the codebase,
+              masks personal information, and generates rich documentation and
+              logs in minutes.
             </p>
           </div>
 

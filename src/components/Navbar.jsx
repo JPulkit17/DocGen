@@ -15,9 +15,9 @@ export default function Navbar() {
           className="flex items-center gap-2 font-bold text-lg text-foreground hover:text-primary transition-colors"
         >
           <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
-            DG
+            DV
           </div>
-          DocGen
+          DataVeil
         </Link>
 
         {/* Navigation Links */}
