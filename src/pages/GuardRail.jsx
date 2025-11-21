@@ -1,17 +1,20 @@
-import { useRegistryEntities } from "../hooks/useRegistryEntities";
+import useProject from "../hooks/useProject";
 import { useParams } from "react-router-dom";
+import { useState } from "react";
 import PIIConfigPanel from "../components/PIIConfigPanel";
 import GuardrailChat from "../components/GuardrailChat";
 
 export default function Guardrail() {
   const params = useParams();
   const projectId = params.id;
-  const { data = [], isLoading, error } = useRegistryEntities();
+  const [selectedGuardrailId, setSelectedGuardrailId] = useState(null);
+  const { data: project = {}, isLoading: projectLoading, error: projectError } = useProject(projectId);
+  
 
-  if (isLoading) {
+  if ( projectLoading) {
     return <div className="p-8 text-center">Loading registry entities...</div>;
   }
-  if (error) {
+  if ( projectError) {
     return (
       <div className="p-8 text-center text-red-500">
         Error loading registry entities
@@ -22,19 +25,20 @@ export default function Guardrail() {
   // Assume backend returns array of PII types with selection info
   // If not, you may need to map/transform data here
   return (
-    <div className="flex overflow-hidden bg-background">
+    <div className="flex w-5xl overflow-hidden bg-background">
       {/* Sidebar */}
-      <div className="w-[340px] min-w-[340px] border-r border-border bg-card flex flex-col h-[80vh] pb-3">
-        <PIIConfigPanel piiTypes={data} projectId={projectId} />
+      <div className="w-1/3 border-r border-border bg-card flex flex-col h-[80vh] pb-3">
+        <PIIConfigPanel  guardrailId={selectedGuardrailId} />
       </div>
 
       {/* Chat Area */}
       <div className="flex-1 min-w-0 flex flex-col h-[80vh]">
         <GuardrailChat
-          projectName={`Project ${projectId}`}
-          guardrailName="presidi-pii"
-          registryEntities={data}
+          projectName={project.name || `Project ${projectId}`}
+          guardrails={project.config}
           projectId={projectId}
+          onSelectGuardrail={setSelectedGuardrailId}
+          selectedGuardrailId={selectedGuardrailId}
         />
       </div>
     </div>

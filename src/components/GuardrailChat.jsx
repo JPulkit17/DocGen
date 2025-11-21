@@ -1,13 +1,17 @@
 import { useState, useRef } from "react";
-import { Send, Trash2 } from "lucide-react";
+import {  Plus, PlusIcon, Send, Trash2, X } from "lucide-react";
 import { Button } from "./retroui/Button";
 import { Input } from "./retroui/Input";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Badge } from "./retroui/Badge";
+import CreateGuardrail from "./CreateGuardrail";
 
 export default function GuardrailChat({
   projectName = "Guardrail Chat",
-  guardrailName = "presidi-pii",
+  guardrails = [],
   projectId,
+  onSelectGuardrail,
+  selectedGuardrailId,
 }) {
   const [messages, setMessages] = useState(() => [
     {
@@ -28,6 +32,7 @@ export default function GuardrailChat({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const queryClient = useQueryClient();
 
   const chatMutation = useMutation({
     mutationFn: async (query) => {
@@ -45,6 +50,27 @@ export default function GuardrailChat({
         throw new Error("Failed to get response from backend");
       }
       return response.json();
+    },
+  });
+
+  const removeGuardrailMutation = useMutation({
+    mutationFn: async (guardrailId) => {
+      const response = await fetch(
+        `${import.meta.env.VITE_CREATE_GUARDRAIL_PROJECT}/${guardrailId}/${projectId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to remove guardrail");
+      }
+      // return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
     },
   });
 
@@ -100,10 +126,40 @@ export default function GuardrailChat({
         <h2 className="text-lg font-semibold text-foreground mb-1">
           {projectName}
         </h2>
-        <p className="text-sm text-muted-foreground">
-          Active Guardrail:{" "}
-          <span className="font-mono text-primary">{guardrailName}</span>
-        </p>
+        <div className="text-sm flex flex-col gap-2 text-muted-foreground">
+          Active Guardrails:{" "}
+          <div className="inline-flex flex-row my-1 gap-2 h-8">
+          {
+            guardrails.map((chip) => (
+                     <Badge 
+                       key={chip.guardrail_id} 
+                       variant={selectedGuardrailId === chip.guardrail_id ? "default" : "outline" }
+                       size="md" 
+                       className="m-0 items-center text-xs gap-2 inline-flex px-3 py-2 cursor-pointer hover:opacity-80 transition-opacity"
+                       onClick={() => onSelectGuardrail?.(chip.guardrail_id)}
+                     >
+            <span>{chip.guardrail_name}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                removeGuardrailMutation.mutate(chip.guardrail_id);
+              }}
+              className="ml-1 hover:opacity-70 transition-opacity"
+              aria-label={`Remove ${chip.guardrail_name}`}
+            >
+              <X size={16} />
+            </button>
+          </Badge>
+
+            ))
+          }
+          <CreateGuardrail>
+          <button  className="h-full size-8 outline-2 outline-foreground p-2 hover:opacity-70 transition-opacity flex items-center justify-between"  ><PlusIcon size={16}/></button>
+
+          </CreateGuardrail>
+          
+          </div>
+        </div>
       </div>
 
       {/* Messages area */}

@@ -1,93 +1,78 @@
 import { Search } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, {  useEffect, useMemo, useState } from "react";
 import { Input } from "./retroui/Input";
 import { Button } from "./retroui/Button";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Switch } from "./retroui/Switch";
+// import { useParams } from "react-router-dom";
 
-export default function PIIConfigPanel({ piiTypes, projectId }) {
+export default function PIIConfigPanel({  guardrailId }) {
+  // const params = useParams();
+  // const projectId = params.id;
+  // const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [guardrailName, setGuardrailName] = useState("");
-  const [selected, setSelected] = useState(() => {
-    if (!piiTypes || !Array.isArray(piiTypes)) return {};
-    return Object.fromEntries(
-      piiTypes.map((pii) => [pii.id, !!pii.default_enabled])
-    );
+  const [selected, setSelected] = useState({});
+
+ 
+
+  // Fetch guardrail entities if guardrailId exists
+  const { data: guardrailData,isLoading } = useQuery({
+    queryKey: ['guardrail', guardrailId],
+    queryFn: async () => {
+      const response = await fetch(
+        `http://localhost:8080/api/guardrails/${guardrailId}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch guardrail');
+      const data = await response.json();
+            console.log(data)
+
+      return data;
+    },
+    enabled: !!guardrailId,
+  //   onSuccess: (data) => {
+
+  //     // Set selected entities from guardrail entities
+  //     if (data.entities && Array.isArray(data.entities)) {
+  //   const selectedIds = {};
+
+  //   data.entities.forEach((entity) => {
+  //     if (entity.enabled) {
+  //       selectedIds[entity.id] = true;  // Only store enabled ones
+  //     }
+  //   });
+  //   setSelected(selectedIds);
+  // }
+    
   });
 
-  React.useEffect(() => {
-    if (!piiTypes || !Array.isArray(piiTypes)) return;
-    setSelected(
-      Object.fromEntries(piiTypes.map((pii) => [pii.id, !!pii.default_enabled]))
-    );
-  }, [piiTypes]);
+useEffect(() => {
+  if (guardrailData && guardrailData.entities) {
+    const selectedInitial = {};
 
-  const filteredPIITypes = useMemo(() => {
-    if (!piiTypes || !Array.isArray(piiTypes) || piiTypes.length === 0) {
-      return [];
-    }
-    return piiTypes.filter((pii) => {
-      if (!pii || !pii.name) {
-        return false;
-      }
-      return pii.name.toLowerCase().includes(searchTerm.toLowerCase());
+    guardrailData.entities.forEach((entity) => {
+      selectedInitial[entity.id] = entity.enabled; // true or false
     });
-  }, [piiTypes, searchTerm]);
+
+    setSelected(selectedInitial);
+  }
+}, [guardrailData]);
+
+
+
 
   const selectedPIIIds = useMemo(() => {
     return Object.entries(selected)
       .filter(([, isSelected]) => isSelected)
-      .map(([id]) => id);
+      .map(([id]) => parseInt(id));
   }, [selected]);
 
-  const createGuardrailMutation = useMutation({
-    mutationFn: async () => {
-      const payload = {
-        name: guardrailName,
-      };
-      const response = await fetch(
-        import.meta.env.VITE_CREATE_GUARDRAIL_PROJECT,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to save guardrail configuration");
-      }
-      return response.json();
-    },
-  });
-
-  const attachProjectMutation = useMutation({
-    mutationFn: async ({ projectId, id }) => {
-      const payload = { guardrailIds: [id] };
-      const response = await fetch(
-        String(import.meta.env.VITE_GITHUB_PROJECTS) + `/${projectId}/config`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to attach project");
-      }
-      return response.json();
-    },
-  });
-
   const saveSelectedPIIMutation = useMutation({
-    mutationFn: async ({ id }) => {
+    mutationFn: async () => {
       const payload = {
         registryEntityIds: selectedPIIIds,
       };
       const response = await fetch(
-        String(import.meta.env.VITE_CREATE_GUARDRAIL_PROJECT) + `/${id}/config`,
+        `http://localhost:8080/api/guardrails/${guardrailId}/config`,
         {
           method: "POST",
           headers: {
@@ -104,34 +89,26 @@ export default function PIIConfigPanel({ piiTypes, projectId }) {
   });
 
   const handleSave = () => {
-    createGuardrailMutation.mutate(undefined, {
-      onSuccess: async (res) => {
-        const id = res.id;
-        attachProjectMutation.mutate(
-          { projectId, id },
-          {
-            onSuccess: async () => {
-              saveSelectedPIIMutation.mutate({ id });
-            },
-          }
-        );
-      },
-    });
+    if (guardrailId) {
+      saveSelectedPIIMutation.mutate();
+    }
   };
+
+  if(guardrailId===null || isLoading){
+    return (
+      <div className="flex flex-col h-full bg-card border-r border-border">
+        <div className="p-4 text-center text-muted-foreground">
+          Select a guardrail to configure PII types.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-card border-r border-border">
       {/* Header */}
       <div className="p-4 border-b border-border">
         <h2 className="text-lg font-semibold mb-4">Configure Guardrail</h2>
-
-        {/* Guardrail Name Input */}
-        <Input
-          placeholder="Enter guardrail name..."
-          value={guardrailName}
-          onChange={(e) => setGuardrailName(e.target.value)}
-          className="mb-4"
-        />
 
         {/* Search */}
         <div className="relative mb-2">
@@ -158,20 +135,19 @@ export default function PIIConfigPanel({ piiTypes, projectId }) {
 
       {/* PII List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {filteredPIITypes.map((pii) => (
+        {guardrailData.entities.map((pii) => (
           <div
             key={pii.id}
             className="flex items-center justify-between p-3 rounded-md bg-background border border-border"
           >
             <p className="text-sm font-medium truncate">{pii.name}</p>
-            <input
-              type="checkbox"
+            <Switch
+            key={!!selected[pii.id]}
               checked={!!selected[pii.id]}
-              disabled={pii.default_enabled}
-              onChange={() =>
+              // disabled={pii.default_enabled}
+              onCheckedChange={() =>
                 setSelected((prev) => ({ ...prev, [pii.id]: !prev[pii.id] }))
               }
-              className="w-4 h-4 ml-3 accent-primary"
             />
           </div>
         ))}
